@@ -8,6 +8,45 @@ function writeToDisplay(text, display) {
     display.innerHTML += text;
 }
 
+// function checkDisplayOverload(displayText, operation) {
+//     return 0;
+// }
+
+function addition(x, y) {
+    return x+y;
+}
+
+function subraction(x, y) {
+    return x-y;
+}
+
+function findOperation(display, operations) {
+    const displayString = display.innerHTML;
+    let operationsArray = [];
+    for(let key in operations) operationsArray.push(operations[key]);
+    return operationsArray.find(operation => displayString.includes(operation));
+}
+
+function equals(display, operations) {
+    const operation = findOperation(display, operations);
+    const displayString = display.innerHTML;
+    const numbersAsString = displayString.split(operation);
+    const numbers = numbersAsString.map(numberString => parseFloat(numberString));
+
+    let result;
+
+    switch (operation) {
+        case calculatorOperationButtons.addition:
+            result = addition(numbers[0], numbers[1]);
+            break;
+        case calculatorOperationButtons.subtract:
+            result = subraction(numbers[0], numbers[1]);
+            break;
+    }
+
+    console.log(result);
+}
+
 const calculatorOperationButtons = {
     C : "C",
     shift: "shift",
@@ -143,7 +182,7 @@ const shiftButton = buttonsFromHTML.find(btn => btn.innerHTML === calculatorOper
 const CButton = buttonsFromHTML.find(btn => btn.innerHTML === calculatorOperationButtons.C);
 let shiftActive = false;
 
-shiftButton.addEventListener("click", event => {
+shiftButton.addEventListener("click", () => {
     if (shiftActive) {
         writeButtonsToHTML(calculatorButtons, button, calculatorButtons[0].regularFace);
         shiftActive = false;
@@ -155,21 +194,43 @@ shiftButton.addEventListener("click", event => {
 });
 
 numberButton.forEach(btn => {
-    btn.addEventListener("click", event => {writeToDisplay(btn.innerHTML, display);});
+    btn.addEventListener("click", () => {writeToDisplay(btn.innerHTML, display);});
 });
 
-CButton.addEventListener("click", event => {
+CButton.addEventListener("click", () => {
     display.innerHTML = "";
 });
 
 const decimalPointButton = buttonsFromHTML.find(btn => 
     btn.innerHTML === calculatorOperationButtons.decimalPoint);
 
-decimalPointButton.addEventListener("click", event => {
+decimalPointButton.addEventListener("click", () => {
     writeToDisplay(decimalPointButton.innerHTML, display);
 });
 
+const nonShiftOperations = [
+    calculatorOperationButtons.addition,
+    calculatorOperationButtons.multiply,
+    calculatorOperationButtons.subtract,
+    calculatorOperationButtons.division,
+    calculatorOperationButtons.square
+];
 
+const nonShiftButtons = buttonsFromHTML.filter(btn => 
+    nonShiftOperations.includes(btn.innerHTML));
 
+nonShiftButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+        if(btn.innerHTML.includes("x") || btn.innerHTML.includes(")")) {
+            btn.innerHTML = btn.innerHTML.replace("x", "");
+            btn.innerHTML = btn.innerHTML.replace(")", "");
+        }
+        writeToDisplay(btn.innerHTML, display);
+    });
+});
 
+const equalsSign = buttonsFromHTML.find(btn => 
+    btn.innerHTML === calculatorOperationButtons.equals);
+
+equalsSign.addEventListener("click", () => {equals(display, calculatorOperationButtons);});
 
