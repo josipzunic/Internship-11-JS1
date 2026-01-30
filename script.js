@@ -52,11 +52,25 @@ function logarithm(x) {
     return Math.log(x);
 }
 
+function cube(x) {
+    return square(x)*x;
+}
+
+function cubeRoot(x) {
+    return Math.sign(x) * Math.pow(Math.abs(x), 1/3);
+}
+
 function findOperations(btnHTML, operations) {
     let operationsArray = [];
     for(let key in operations) operationsArray.push(operations[key]);
-    return operationsArray.filter(operation => 
+    const found = operationsArray.filter(operation => 
         btnHTML.includes(operation.replaceAll("x", "").replaceAll(")", "")));
+    
+    return found.sort((a, b) => {
+    const aTrimmed = a.replaceAll("x", "").replaceAll(")", "");
+    const bTrimmed = b.replaceAll("x", "").replaceAll(")", "");
+    return bTrimmed.length - aTrimmed.length;
+});
 }
 
 function equals(display, operations, btnHTML) {
@@ -72,12 +86,6 @@ function equals(display, operations, btnHTML) {
         .filter(numberCandidat => !isNaN(numberCandidat));
 
     let result;
-    // console.log(operationsArray);
-    // console.log(displayString);
-    // console.log(numbersAsString);
-    // console.log(operationsTrimmed);
-    // console.log(firstOperation);
-    // console.log(numbers);
 
     switch (firstOperation) {
         case calculatorOperationButtons.addition:
@@ -120,6 +128,14 @@ function equals(display, operations, btnHTML) {
                 result = Math.round(result*1000)/1000;
             }
             break;
+
+        case calculatorOperationButtons.cube:
+            result = cube(numbers[0]);
+            break;
+
+        case calculatorOperationButtons.cubeRoot:
+            result = cubeRoot(numbers[0]);
+            break;
     }
     display.innerHTML = `${result}`;
 }
@@ -132,9 +148,9 @@ const calculatorOperationButtons = {
     multiply: "·",
     factorial: "!",
     addition: "+",
+    cubeRoot: "cbrt(x)",
     logarithm: "log(x)",
     subtract: "-",
-    cubeRoot: "x^1/3",
     division: "/",
     cube: "x^3",
     decimalPoint: ".",
@@ -314,5 +330,7 @@ nonShiftButtons.forEach(btn => {
 const equalsSign = buttonsFromHTML.find(btn => 
     btn.innerHTML === calculatorOperationButtons.equals);
 
-equalsSign.addEventListener("click", () => {equals(display, calculatorOperationButtons, btnHTML);});
+equalsSign.addEventListener("click", () => {
+    equals(display, calculatorOperationButtons, btnHTML);
+});
 
