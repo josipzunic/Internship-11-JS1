@@ -73,7 +73,93 @@ function findOperations(btnHTML, operations) {
 });
 }
 
-function equals(display, operations, btnHTML) {
+function operationCase(firstOperation, number1, number2) {
+    let result;
+
+    switch (firstOperation) {
+        case calculatorOperationButtons.addition:
+            result = addition(number1, number2);
+            break;
+
+        case calculatorOperationButtons.subtract:
+            result = subraction(number1, number2);
+            break;
+
+        case calculatorOperationButtons.multiply:
+            result = multiplication(number1, number2);
+            break;
+
+        case calculatorOperationButtons.division:
+            result = division(number1, number2);
+            if (!isNaN(result)) {
+                result = Math.round(result*1000)/1000;
+            }
+            break;
+
+        case calculatorOperationButtons.square:
+            result = square(number1);
+            break;
+
+        case calculatorOperationButtons.sqaureRoot:
+            result = squareRoot(number1);
+            if (!isNaN(result)) {
+                result = Math.round(result*1000)/1000;
+            }
+            break;
+
+        case calculatorOperationButtons.factorial:
+            result = factorial(number1);
+            break;
+
+        case calculatorOperationButtons.logarithm:
+            result = logarithm(number1);
+            if (!isNaN(result)) {
+                result = Math.round(result*1000)/1000;
+            }
+            break;
+
+        case calculatorOperationButtons.cube:
+            result = cube(number1);
+            break;
+
+        case calculatorOperationButtons.cubeRoot:
+            result = cubeRoot(number1);
+            break;
+    }
+
+    return result;
+}
+
+function writeHistory(history, display, result, operation, numbers, historyArray) {
+    const historyItem = document.createElement("div");
+    historyItem.className = "history-item";
+    const time = new Date;
+
+    const historyObject = {
+        number1: numbers[0],
+        number2: numbers[1],
+        operation: operation,
+        result: result,
+        timeOfOperation: time
+    };
+
+    historyArray.push(historyObject);
+
+    let item;
+
+    if(!isNaN(historyObject.number2))
+        item = `${historyObject.number1} ${historyObject.operation} ${historyObject.number2} = ${historyObject.result}, ${historyObject.timeOfOperation.getHours()}:${historyObject.timeOfOperation.getMinutes()}`;
+    else {
+        let calculation = historyObject.operation.replaceAll("x", historyObject.number1);
+        item = `${calculation} = ${historyObject.result}, ${historyObject.timeOfOperation.getHours()}:${historyObject.timeOfOperation.getMinutes()}`;
+    }
+    historyItem.innerHTML = item;
+    history.appendChild(historyItem);  
+}
+
+
+
+function equals(display, operations, btnHTML, history, historyArray) {
     const operationsArray = findOperations(btnHTML, operations);
     const operationsTrimmed = operationsArray.map(operation => 
         operation.replaceAll("x", "").replaceAll(")", ""));
@@ -85,59 +171,11 @@ function equals(display, operations, btnHTML) {
         .map(numberString => parseFloat(numberString))
         .filter(numberCandidat => !isNaN(numberCandidat));
 
-    let result;
-
-    switch (firstOperation) {
-        case calculatorOperationButtons.addition:
-            result = addition(numbers[0], numbers[1]);
-            break;
-
-        case calculatorOperationButtons.subtract:
-            result = subraction(numbers[0], numbers[1]);
-            break;
-
-        case calculatorOperationButtons.multiply:
-            result = multiplication(numbers[0], numbers[1]);
-            break;
-
-        case calculatorOperationButtons.division:
-            result = division(numbers[0], numbers[1]);
-            if (!isNaN(result)) {
-                result = Math.round(result*1000)/1000;
-            }
-            break;
-
-        case calculatorOperationButtons.square:
-            result = square(numbers[0]);
-            break;
-
-        case calculatorOperationButtons.sqaureRoot:
-            result = squareRoot(numbers[0]);
-            if (!isNaN(result)) {
-                result = Math.round(result*1000)/1000;
-            }
-            break;
-
-        case calculatorOperationButtons.factorial:
-            result = factorial(numbers[0]);
-            break;
-
-        case calculatorOperationButtons.logarithm:
-            result = logarithm(numbers[0]);
-            if (!isNaN(result)) {
-                result = Math.round(result*1000)/1000;
-            }
-            break;
-
-        case calculatorOperationButtons.cube:
-            result = cube(numbers[0]);
-            break;
-
-        case calculatorOperationButtons.cubeRoot:
-            result = cubeRoot(numbers[0]);
-            break;
-    }
+    const result = operationCase(firstOperation, numbers[0], numbers[1]);
+    
+    let tempDisplayText = display.innerHTML;
     display.innerHTML = `${result}`;
+    writeHistory(history, tempDisplayText, result, firstOperation, numbers, historyArray);
 }
 
 const calculatorOperationButtons = {
@@ -154,7 +192,10 @@ const calculatorOperationButtons = {
     division: "/",
     cube: "x^3",
     decimalPoint: ".",
-    equals: "="
+    equals: "=",
+    history: "history",
+    filterByOperation: "f: op",
+    filterByText: "f: text"
 };
 
 
@@ -192,14 +233,32 @@ const calculatorButtons = [
     {
         regularFace: "regularFaceValue",
         shiftFace: "shiftFaceValue",
-        regularFaceValue: calculatorOperationButtons.subtract,
-        shiftFaceValue: calculatorOperationButtons.cubeRoot
+        regularFaceValue: calculatorOperationButtons.history,
+        shiftFaceValue: calculatorOperationButtons.history
     },
     {
         regularFace: "regularFaceValue",
         shiftFace: "shiftFaceValue",
         regularFaceValue: calculatorOperationButtons.division,
         shiftFaceValue: calculatorOperationButtons.cube
+    },
+    {
+        regularFace: "regularFaceValue",
+        shiftFace: "shiftFaceValue",
+        regularFaceValue: calculatorOperationButtons.filterByOperation,
+        shiftFaceValue: calculatorOperationButtons.filterByOperation
+    },
+    {
+        regularFace: "regularFaceValue",
+        shiftFace: "shiftFaceValue",
+        regularFaceValue: calculatorOperationButtons.subtract,
+        shiftFaceValue: calculatorOperationButtons.cubeRoot
+    },
+    {
+        regularFace: "regularFaceValue",
+        shiftFace: "shiftFaceValue",
+        regularFaceValue: calculatorOperationButtons.filterByText,
+        shiftFaceValue: calculatorOperationButtons.filterByText
     },
     {
         regularFace: "regularFaceValue",
@@ -264,7 +323,8 @@ const buttons = calculator.querySelector(".buttons");
 const button = buttons.querySelectorAll(".button");
 const numberButton = buttons.querySelectorAll(".number-button");
 const display = calculator.querySelector(".display");
-
+const historyItems = document.querySelector(".calculator-history .history-items");
+const history = document.querySelector(".calculator-history");
 
 writeButtonsToHTML(calculatorButtons, button, calculatorButtons[0].regularFace);
 writeButtonsToHTML(numberButtons, numberButton, numberButtons[0].numberFace);
@@ -314,6 +374,7 @@ const nonShiftButtons = buttonsFromHTML.filter(btn => {
 });
 
 let btnHTML;
+let historyArray = [];
 
 nonShiftButtons.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -330,7 +391,24 @@ nonShiftButtons.forEach(btn => {
 const equalsSign = buttonsFromHTML.find(btn => 
     btn.innerHTML === calculatorOperationButtons.equals);
 
+
 equalsSign.addEventListener("click", () => {
-    equals(display, calculatorOperationButtons, btnHTML);
+    equals(display, calculatorOperationButtons, btnHTML, historyItems, historyArray);
 });
 
+const historyButton = buttonsFromHTML.find(btn => 
+    btn.innerHTML === calculatorOperationButtons.history
+);
+
+let isHistoryActive = false;
+
+historyButton.addEventListener("click", () => {
+    if (isHistoryActive) {
+        history.style.display = "none";
+        isHistoryActive = false;
+    }
+    else {
+        history.style.display = "flex";
+        isHistoryActive = true;
+    }
+});

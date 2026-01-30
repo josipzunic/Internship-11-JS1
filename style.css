@@ -23,6 +23,11 @@ body {
     color: var(--text-color);
 }
 
+h1 {
+    padding: 0;
+    margin: 0;
+}
+
 #calculator {
     border: 1px solid var(--primary-number-color);
     height: 600px;
@@ -81,8 +86,40 @@ body {
 .calculator-history {
     align-self: flex-start;
     margin-top: 100px;
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
+    gap: 1rem;
+    width: 300px;
+}
+
+.history-items {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.history-item {
+    width: 100%;
+    font-size: 1.5rem;
+    border: 2px solid var(--text-color);
+    text-align: center;
+}
+
+@media (max-width: 800px) {
+    body {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    #calculator {
+        margin-top: 150px;
+    }
+
+    .calculator-history {
+        justify-content: center;
+        align-self: unset;
+        width: 300px;
+    }
 }
