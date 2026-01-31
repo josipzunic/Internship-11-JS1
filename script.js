@@ -8,10 +8,6 @@ function writeToDisplay(text, display) {
     display.innerHTML += text;
 }
 
-// function checkDisplayOverload(displayText, operation) {
-//     return 0;
-// }
-
 function addition(x, y) {
     return x+y;
 }
@@ -100,7 +96,7 @@ function operationCase(firstOperation, number1, number2) {
             result = square(number1);
             break;
 
-        case calculatorOperationButtons.sqaureRoot:
+        case calculatorOperationButtons.squareRoot:
             result = squareRoot(number1);
             if (!isNaN(result)) {
                 result = Math.round(result*1000)/1000;
@@ -124,6 +120,9 @@ function operationCase(firstOperation, number1, number2) {
 
         case calculatorOperationButtons.cubeRoot:
             result = cubeRoot(number1);
+            if (!isNaN(result)) {
+                result = Math.round(result*1000)/1000;
+            }
             break;
     }
 
@@ -172,28 +171,51 @@ function writeHistory(historyArray) {
 function findOperationKey(operationSymbol) {
     const key = Object.keys(calculatorOperationButtons)
         .find(k => calculatorOperationButtons[k] === operationSymbol);
-    return calculationOperationsText[key] || null;
+    return calculationOperationsText[key];
 }
 
-function equals(display, operations, btnHTML, historyArray) {
-    const operationsArray = findOperations(btnHTML, operations);
+function equals(display, operations, historyArray) {
+    const displayString = display.innerHTML.trim();
+    const operationsArray = findOperations(displayString, operations);
     const operationsTrimmed = operationsArray.map(operation => 
         operation.replaceAll("x", "").replaceAll(")", ""));
-    const displayString = display.innerHTML.trim();
     const firstOperationTrimmed = operationsTrimmed[0];
     const firstOperation = operationsArray[0];
     const operationText = findOperationKey(firstOperation);
-
     const numbersAsString = displayString.split(firstOperationTrimmed).map(s => s.trim());
+
+    if (displayString[0] === "-" || displayString[0] === "+") {
+        if (numbersAsString[0] === "") {
+            numbersAsString.shift();
+            numbersAsString[0] = displayString[0] + numbersAsString[0];
+        }
+    }
+
+    if(display.innerHTML === "") {
+        display.innerHTML = "empty calculation";
+        return 0;
+    }
+
+    if(checkDisplayOverload(displayString, operationsArray)) {
+        display.innerHTML = "display overload";
+        return 0;
+    }
+
     const numbers = numbersAsString
         .map(numberString => parseFloat(numberString))
         .filter(numberCandidat => !isNaN(numberCandidat));
 
     const result = operationCase(firstOperation, numbers[0], numbers[1]);
+
+    if (result === undefined || isNaN(result)) {
+        display.innerHTML = "Invalid input";
+        return 0;
+    }
     
     display.innerHTML = `${result}`;
 
     createHistoryItem(result, firstOperation, numbers, historyArray, operationText);
+    if (isHistoryActive) writeHistory(historyArray);
 }
 
 function filterOption(condition, historyArray) {
@@ -208,6 +230,36 @@ function filterOption(condition, historyArray) {
         historyItem.style.color="red";
     }
     else writeHistory(filteredHistory);
+}
+
+function checkDisplayOverload(displayString, operationsArray) {
+    const unaryOperations = [
+        calculatorOperationButtons.square,
+        calculatorOperationButtons.squareRoot,
+        calculatorOperationButtons.factorial,
+        calculatorOperationButtons.cube,
+        calculatorOperationButtons.cubeRoot,
+        calculatorOperationButtons.logarithm
+    ];
+
+    const firstOperation = operationsArray[0];
+    if (unaryOperations.includes(firstOperation)) {
+        return operationsArray.filter(op => unaryOperations.includes(op)).length > 1;
+    }
+
+    let adjustedString = displayString;
+    if (displayString[0] === "-" || displayString[0] === "+") {
+        adjustedString = displayString.slice(1);
+    }
+
+    let operationCount = 0;
+    operationsArray.forEach(operation => {
+        if (unaryOperations.includes(operation)) return;
+        const trimmed = operation.replaceAll("x", "").replaceAll(")", "");
+        operationCount += adjustedString.split(trimmed).length - 1;
+    });
+
+    return operationCount > 1;
 }
 
 const calculatorOperationButtons = {
@@ -418,7 +470,6 @@ const nonShiftButtons = buttonsFromHTML.filter(btn => {
     return nonShiftOperations.includes(btn.innerHTML);
 });
 
-let btnHTML;
 let historyArray = [];
 
 nonShiftButtons.forEach(btn => {
@@ -429,7 +480,6 @@ nonShiftButtons.forEach(btn => {
             tempHTML = tempHTML.replaceAll("x", "").replaceAll(")", "");
         }
         writeToDisplay(tempHTML, display);
-        btnHTML = display.innerHTML;
     });
 });
 
@@ -438,7 +488,7 @@ const equalsSign = buttonsFromHTML.find(btn =>
 
 
 equalsSign.addEventListener("click", () => {
-    equals(display, calculatorOperationButtons, btnHTML, historyArray);
+    equals(display, calculatorOperationButtons, historyArray);
 });
 
 const historyButton = buttonsFromHTML.find(btn => 
