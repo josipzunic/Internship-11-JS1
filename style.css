@@ -93,6 +93,14 @@ h1 {
     width: 300px;
 }
 
+.filter {
+    display: none;
+}
+
+.filter.show {
+    display: inline;
+}
+
 .history-items {
     width: 100%;
     display: flex;

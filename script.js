@@ -130,42 +130,60 @@ function operationCase(firstOperation, number1, number2) {
     return result;
 }
 
-function writeHistory(history, display, result, operation, numbers, historyArray) {
-    const historyItem = document.createElement("div");
-    historyItem.className = "history-item";
+function createHistoryItem(result, operation, numbers, historyArray, operationText) {
     const time = new Date;
 
     const historyObject = {
         number1: numbers[0],
         number2: numbers[1],
         operation: operation,
+        operationText: operationText,
         result: result,
         timeOfOperation: time
     };
 
     historyArray.push(historyObject);
-
-    let item;
-
-    if(!isNaN(historyObject.number2))
-        item = `${historyObject.number1} ${historyObject.operation} ${historyObject.number2} = ${historyObject.result}, ${historyObject.timeOfOperation.getHours()}:${historyObject.timeOfOperation.getMinutes()}`;
-    else {
-        let calculation = historyObject.operation.replaceAll("x", historyObject.number1);
-        item = `${calculation} = ${historyObject.result}, ${historyObject.timeOfOperation.getHours()}:${historyObject.timeOfOperation.getMinutes()}`;
-    }
-    historyItem.innerHTML = item;
-    history.appendChild(historyItem);  
 }
 
+function clearHistory() {
+    historyContainer.innerHTML = "";
+}
 
+function writeHistory(historyArray) {
+    clearHistory();
 
-function equals(display, operations, btnHTML, history, historyArray) {
+    historyArray.forEach(element => {
+        const historyItem = document.createElement("div");
+        historyItem.className = "history-item";
+        
+        let item;
+        if(!isNaN(element.number2)) {
+            item = `${element.number1} ${element.operation} ${element.number2} = ${element.result}, ${element.timeOfOperation.getHours()}:${element.timeOfOperation.getMinutes()}`;
+        } else {
+            let calculation = element.operation.replaceAll("x", element.number1);
+            item = `${calculation} = ${element.result}, ${element.timeOfOperation.getHours()}:${element.timeOfOperation.getMinutes()}`;
+        }
+        
+        historyItem.innerHTML = item;
+        historyContainer.appendChild(historyItem);
+    });
+}
+
+function findOperationKey(operationSymbol) {
+    const key = Object.keys(calculatorOperationButtons)
+        .find(k => calculatorOperationButtons[k] === operationSymbol);
+    return calculationOperationsText[key] || null;
+}
+
+function equals(display, operations, btnHTML, historyArray) {
     const operationsArray = findOperations(btnHTML, operations);
     const operationsTrimmed = operationsArray.map(operation => 
         operation.replaceAll("x", "").replaceAll(")", ""));
     const displayString = display.innerHTML.trim();
     const firstOperationTrimmed = operationsTrimmed[0];
     const firstOperation = operationsArray[0];
+    const operationText = findOperationKey(firstOperation);
+
     const numbersAsString = displayString.split(firstOperationTrimmed).map(s => s.trim());
     const numbers = numbersAsString
         .map(numberString => parseFloat(numberString))
@@ -173,16 +191,30 @@ function equals(display, operations, btnHTML, history, historyArray) {
 
     const result = operationCase(firstOperation, numbers[0], numbers[1]);
     
-    let tempDisplayText = display.innerHTML;
     display.innerHTML = `${result}`;
-    writeHistory(history, tempDisplayText, result, firstOperation, numbers, historyArray);
+
+    createHistoryItem(result, firstOperation, numbers, historyArray, operationText);
+}
+
+function filterOption(condition, historyArray) {
+    let filteredHistory = historyArray.filter(element =>
+        element.operation === condition || element.operationText === condition
+    );
+    if (filteredHistory.length === 0) {
+        clearHistory();
+        const historyItem = document.createElement("div");
+        historyItem.innerHTML = "nema takvih operacija u povijesti, provjerite jeste li dobro       unijeli operaciju";
+        historyContainer.appendChild(historyItem);
+        historyItem.style.color="red";
+    }
+    else writeHistory(filteredHistory);
 }
 
 const calculatorOperationButtons = {
     C : "C",
     shift: "shift",
     square: "x^2",
-    sqaureRoot: "sqrt(x)",
+    squareRoot: "sqrt(x)",
     multiply: "·",
     factorial: "!",
     addition: "+",
@@ -194,8 +226,21 @@ const calculatorOperationButtons = {
     decimalPoint: ".",
     equals: "=",
     history: "history",
-    filterByOperation: "f: op",
-    filterByText: "f: text"
+    filter: "filter",
+    power: "power"
+};
+
+const calculationOperationsText = {
+    square: "kvadriranje",
+    squareRoot: "kvadratni korijen",
+    multiply: "mnozenje",
+    factorial: "faktorijel",
+    addition: "zbrajanje",
+    cubeRoot: "kubni korijen",
+    logarithm: "logaritmiranje",
+    subtract: "oduzimanje",
+    division: "dijeljenje",
+    cube: "kubiranje"
 };
 
 
@@ -216,7 +261,7 @@ const calculatorButtons = [
         regularFace: "regularFaceValue",
         shiftFace: "shiftFaceValue",
         regularFaceValue: calculatorOperationButtons.square,
-        shiftFaceValue: calculatorOperationButtons.sqaureRoot
+        shiftFaceValue: calculatorOperationButtons.squareRoot
     },
     {
         regularFace: "regularFaceValue",
@@ -245,8 +290,8 @@ const calculatorButtons = [
     {
         regularFace: "regularFaceValue",
         shiftFace: "shiftFaceValue",
-        regularFaceValue: calculatorOperationButtons.filterByOperation,
-        shiftFaceValue: calculatorOperationButtons.filterByOperation
+        regularFaceValue: calculatorOperationButtons.filter,
+        shiftFaceValue: calculatorOperationButtons.filter
     },
     {
         regularFace: "regularFaceValue",
@@ -257,8 +302,8 @@ const calculatorButtons = [
     {
         regularFace: "regularFaceValue",
         shiftFace: "shiftFaceValue",
-        regularFaceValue: calculatorOperationButtons.filterByText,
-        shiftFaceValue: calculatorOperationButtons.filterByText
+        regularFaceValue: calculatorOperationButtons.power,
+        shiftFaceValue: calculatorOperationButtons.power
     },
     {
         regularFace: "regularFaceValue",
@@ -323,8 +368,8 @@ const buttons = calculator.querySelector(".buttons");
 const button = buttons.querySelectorAll(".button");
 const numberButton = buttons.querySelectorAll(".number-button");
 const display = calculator.querySelector(".display");
-const historyItems = document.querySelector(".calculator-history .history-items");
 const history = document.querySelector(".calculator-history");
+const historyContainer = document.querySelector(".history-items");
 
 writeButtonsToHTML(calculatorButtons, button, calculatorButtons[0].regularFace);
 writeButtonsToHTML(numberButtons, numberButton, numberButtons[0].numberFace);
@@ -393,7 +438,7 @@ const equalsSign = buttonsFromHTML.find(btn =>
 
 
 equalsSign.addEventListener("click", () => {
-    equals(display, calculatorOperationButtons, btnHTML, historyItems, historyArray);
+    equals(display, calculatorOperationButtons, btnHTML, historyArray);
 });
 
 const historyButton = buttonsFromHTML.find(btn => 
@@ -406,9 +451,33 @@ historyButton.addEventListener("click", () => {
     if (isHistoryActive) {
         history.style.display = "none";
         isHistoryActive = false;
+        clearHistory();
     }
     else {
         history.style.display = "flex";
         isHistoryActive = true;
+        writeHistory(historyArray);
     }
+});
+
+const filterHistory = buttonsFromHTML.find(btn => 
+    btn.innerHTML === calculatorOperationButtons.filter
+);
+
+
+filterHistory.addEventListener("click", () => {
+    const filter = document.getElementsByClassName("filter")[0];
+    const input = document.querySelector('input[type="text"]');
+    const placeholder = "+, -, ·, /, sqrt(x), x^2...";
+    filter.classList.toggle("show");
+    input.placeholder = placeholder;
+});
+
+
+const enterButton = document.querySelector('input[type="button"]');
+const input = document.querySelector('input[type="text"]');
+enterButton.addEventListener("click", () => {
+    const inputContent = input.value;
+    filterOption(inputContent, historyArray);
+    input.value = "";
 });
