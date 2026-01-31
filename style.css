@@ -80,7 +80,11 @@ h1 {
 }
 
 .button-no-display {
-    background-color: black;
+    background-color: var(--primary-operation-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
 }
 
 .calculator-history {
@@ -113,6 +117,10 @@ h1 {
     font-size: 1.5rem;
     border: 2px solid var(--text-color);
     text-align: center;
+}
+
+.power-button {
+    background-color: rosybrown;
 }
 
 @media (max-width: 800px) {

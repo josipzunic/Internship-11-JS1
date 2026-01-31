@@ -227,7 +227,7 @@ const calculatorOperationButtons = {
     equals: "=",
     history: "history",
     filter: "filter",
-    power: "power"
+    power: "OFF"
 };
 
 const calculationOperationsText = {
@@ -480,4 +480,29 @@ enterButton.addEventListener("click", () => {
     const inputContent = input.value;
     filterOption(inputContent, historyArray);
     input.value = "";
+});
+
+const powerButton = buttonsFromHTML.find(btn => 
+    btn.innerHTML === calculatorOperationButtons.power
+);
+powerButton.classList.add("power-button");
+
+let isActive = true;
+
+powerButton.addEventListener("click", () => {
+    isActive = !isActive;
+    
+    if (isActive) {
+        calculator.style.pointerEvents = "auto";
+        calculator.style.opacity = "1";
+        powerButton.innerHTML = "OFF";
+    } 
+    else {
+        calculator.style.pointerEvents = "none";
+        calculator.style.opacity = "0.5";
+        powerButton.innerHTML = "ON";
+        clearHistory();
+    }
+
+    powerButton.style.pointerEvents = "auto";
 });
