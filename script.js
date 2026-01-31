@@ -36,6 +36,8 @@ function squareRoot(x) {
 
 function factorial(x) {
     if (x < 0) return "factorial of negative number!";
+    if (!Number.isInteger(x)) return "factorial of decimal number, use gamma function";
+    if(x === 0) return 1;
     const factors = [];
     for(let i = x; i >= 1; i--) factors.push(i);
     
@@ -206,6 +208,11 @@ function equals(display, operations, historyArray) {
         .filter(numberCandidat => !isNaN(numberCandidat));
 
     const result = operationCase(firstOperation, numbers[0], numbers[1]);
+
+    if (typeof result === "string") {
+        display.innerHTML = result;
+        return 0;
+    }
 
     if (result === undefined || isNaN(result)) {
         display.innerHTML = "Invalid input";
